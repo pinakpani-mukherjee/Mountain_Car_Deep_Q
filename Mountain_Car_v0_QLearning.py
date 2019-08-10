@@ -1,6 +1,6 @@
 import gym
 import numpy as np
-
+import matplotlib.pyplot as plt
 env = gym.make("MountainCar-v0")
 
 #setting out constants
@@ -8,7 +8,7 @@ env = gym.make("MountainCar-v0")
 LEARNING_RATE = 0.1 
 DISCOUNT = 0.95
 EPISODES = 25000
-SHOW_EVERY = 5000
+SHOW_EVERY = 500
 epsilon = 1
 START_EPSILON_DECAYING = 1
 END_EPSILON_DECAYING = EPISODES//2
@@ -31,6 +31,8 @@ print(discrete_os_win_size)
 
 q_table = np.random.uniform(low=-2,high=0,size =(DISCRETE_OS_SIZE + [env.action_space.n]))
 
+ep_rewards = []
+aggr_ep_rewards = {'ep': [], 'avg': [], 'min': [], 'max': []}
 #creating a function to convert continous states to discreet states
 
 def get_discrete_state(state):
@@ -39,6 +41,7 @@ def get_discrete_state(state):
 
 
 for episode in range(EPISODES):
+    episode_reward = 0
     
     if episode%SHOW_EVERY ==0:
         print(episode)
@@ -54,7 +57,7 @@ for episode in range(EPISODES):
         else:
             action = np.random.randint(0,env.action_space.n)
         new_state,reward,done, _ = env.step(action)
-        
+        episode_reward += reward
         new_discrete_state = get_discrete_state(new_state)
         if render:
             env.render()
@@ -71,6 +74,24 @@ for episode in range(EPISODES):
     
     if END_EPSILON_DECAYING>= episode >= START_EPSILON_DECAYING:
         epsilon -= epsilon_decay_value
-            
+    ep_rewards.append(episode_reward)
+
+    if not episode % SHOW_EVERY == 0:
+        average_reward = sum(ep_rewards[-SHOW_EVERY:])/len(ep_rewards[-SHOW_EVERY:])
+        aggr_ep_rewards['ep'].append(episode)
+        aggr_ep_rewards['avg'].append(average_reward)
+        aggr_ep_rewards['min'].append(min(ep_rewards[-SHOW_EVERY:]))
+        aggr_ep_rewards['max'].append(max(ep_rewards[-SHOW_EVERY:]))
+        
+        print(f"Episode: {episode} avg: {average_reward} min: {min(ep_rewards[-SHOW_EVERY:])} max: {max(ep_rewards[-SHOW_EVERY:])}")
         
 env.close()
+
+plt.plot(aggr_ep_rewards['ep'],aggr_ep_rewards['avg'], label = "average" )
+
+plt.plot(aggr_ep_rewards['ep'],aggr_ep_rewards['min'], label = "minimum" )
+
+plt.plot(aggr_ep_rewards['ep'],aggr_ep_rewards['max'], label = "maximum" )
+
+plt.legend(loc=4)
+plt.show()
