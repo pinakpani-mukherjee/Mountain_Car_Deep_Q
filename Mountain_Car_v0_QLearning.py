@@ -7,7 +7,7 @@ env = gym.make("MountainCar-v0")
 
 LEARNING_RATE = 0.1 
 DISCOUNT = 0.95
-EPISODES = 25000
+EPISODES = 40000
 SHOW_EVERY = 500
 epsilon = 1
 START_EPSILON_DECAYING = 1
@@ -22,7 +22,7 @@ print(env.action_space.n)
 
 #creating range for observation space
 
-DISCRETE_OS_SIZE = [20]* len(env.observation_space.high)
+DISCRETE_OS_SIZE = [40]* len(env.observation_space.high)
 print(DISCRETE_OS_SIZE)
 discrete_os_win_size = (env.observation_space.high - env.observation_space.low)/DISCRETE_OS_SIZE
 print(discrete_os_win_size)
@@ -59,8 +59,10 @@ for episode in range(EPISODES):
         new_state,reward,done, _ = env.step(action)
         episode_reward += reward
         new_discrete_state = get_discrete_state(new_state)
-        if render:
-            env.render()
+# =============================================================================
+#         if render:
+#             env.render()
+# =============================================================================
         if not done:
             max_future_q = np.max(q_table[new_discrete_state])
             current_q = q_table[discrete_state+(action,)]
@@ -75,8 +77,9 @@ for episode in range(EPISODES):
     if END_EPSILON_DECAYING>= episode >= START_EPSILON_DECAYING:
         epsilon -= epsilon_decay_value
     ep_rewards.append(episode_reward)
-
-    if not episode % SHOW_EVERY == 0:
+        
+    if not episode % SHOW_EVERY :
+        np.save(f"qtables/{episode}-qtable.npy",q_table)
         average_reward = sum(ep_rewards[-SHOW_EVERY:])/len(ep_rewards[-SHOW_EVERY:])
         aggr_ep_rewards['ep'].append(episode)
         aggr_ep_rewards['avg'].append(average_reward)
